@@ -264,26 +264,82 @@ def server(input, output, session):
         if data.empty:
             return go.Figure()
         
-        # Features to check
-        pois = ['Junction', 'Crossing', 'Traffic_Signal', 'Stop']
+        # 1. Data Preparation
+        poi_cols = ['Junction', 'Crossing', 'Traffic_Signal', 'Stop', 
+                    'Station', 'Amenity', 'Bump', 'Give_Way', 'No_Exit', 'Roundabout']
         
-        # Create a subplot grid for Pie charts (2x2)
-        from plotly.subplots import make_subplots
-        fig = make_subplots(rows=2, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}],
-                                                   [{'type':'domain'}, {'type':'domain'}]],
-                            subplot_titles=pois)
+        existing_cols = [c for c in poi_cols if c in data.columns]
+        
+        results = []
+        total_accidents = len(data)
+        
+        for col in existing_cols:
+            count = data[col].sum()
+            # Calculate percentage
+            pct = (count / total_accidents * 100)
+            
+            if count > 0: 
+                # Create a label that includes the percentage
+                # e.g., "Junction (14.5%)"
+                pretty_name = col.replace('_', ' ')
+                label_with_pct = f"{pretty_name} ({pct:.2f}%)"
+                
+                results.append({
+                    'Feature': pretty_name,       # Clean name for sorting
+                    'Label': label_with_pct,      # Name + Pct for Display
+                    'Count': count,
+                    'Percentage': pct
+                })
+        
+        # Sort by Count so the spiral shape looks good
+        poi_df = pd.DataFrame(results).sort_values(by='Count', ascending=True)
 
-        # Loop to create pie charts
-        positions = [(1,1), (1,2), (2,1), (2,2)]
-        for i, poi in enumerate(pois):
-            if poi in data.columns:
-                counts = data[poi].value_counts()
-                fig.add_trace(
-                    go.Pie(labels=counts.index, values=counts.values, name=poi),
-                    row=positions[i][0], col=positions[i][1]
+        # 2. Build Aesthetic Polar Chart
+        fig = px.bar_polar(
+            poi_df, 
+            r="Count", 
+            theta="Label", # Use the new label with %
+            color="Feature", # Color by the new label to match legend
+            color_discrete_sequence=px.colors.qualitative.Bold, 
+            template="plotly_white"
+        )
+        
+        # 3. Customizing the "Flower" Look
+        fig.update_layout(
+            title="",
+            margin=dict(t=20, b=20, l=40, r=80), # Increased right margin for wider legend
+            height=380,
+            showlegend=True,
+            legend=dict(
+                title=dict(text="Feature", font=dict(size=12, weight="bold")),
+                orientation="v", 
+                yanchor="middle", y=0.5, 
+                xanchor="left", x=0.95, # Move legend further right
+                font=dict(size=11)
+            ),
+            polar=dict(
+                bgcolor="rgba(255,255,255,0)", 
+                radialaxis=dict(
+                    visible=True,
+                    showticklabels=False, 
+                    ticks='',
+                    gridcolor='#f0f0f0', 
+                    gridwidth=1
+                ),
+                angularaxis=dict(
+                    tickfont=dict(size=11.5, color='#555'),
+                    rotation=90, 
+                    direction="clockwise"
                 )
-
-        fig.update_layout(height=400, showlegend=False)
+            )
+        )
+        
+        # 4. Enhance Tooltips
+        fig.update_traces(
+            hovertemplate="<b>%{color}</b><br>" +
+                          "Accidents: %{r}<br>"
+        )
+        
         return fig
 
 
