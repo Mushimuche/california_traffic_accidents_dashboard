@@ -103,8 +103,7 @@ try:
     total_us_rows = q.select(pl.len()).collect().item()
     percent = (total_ca_rows / total_us_rows) * 100
 
-    print(f"\nResults:")
-    print(f"------------------------")
+
     print(f"Total US Accidents:      {total_us_rows:,}")
     print(f"Total CA Accidents:      {total_ca_rows:,}")
     print(f"California Share:        {percent:.2f}% of all data")
