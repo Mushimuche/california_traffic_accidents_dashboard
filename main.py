@@ -7,6 +7,57 @@ import faicons as fa
 import os
 from sklearn.cluster import KMeans
 
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+
+from typing import Any 
+
+# =============================================================================
+# 0. GLOBAL MODEL TRAINING (Runs once on startup)
+# =============================================================================
+
+print("Initializing Prediction Model...")
+rf_model: Any = None # <--- CHANGE THIS LINE (Added : Any)
+le_weather = LabelEncoder()
+unique_weather_options = ["Clear", "Rain", "Snow", "Fog", "Overcast"] # Default fallback
+
+try:
+    if os.path.exists("us_accidents_ca_only.csv"):
+        # Load necessary columns for training
+        train_cols = ['Severity', 'Start_Time', 'Weather_Condition', 'Temperature(F)', 
+                    'Humidity(%)', 'Traffic_Signal', 'Junction', 'Crossing']
+        
+        # Read sample (10k rows is enough for a demo)
+        df_train = pd.read_csv("us_accidents_ca_only.csv", usecols=lambda c: c in train_cols)
+        df_train = df_train.sample(n=min(10000, len(df_train)), random_state=42)
+        
+        # Preprocessing
+        df_train['Start_Time'] = pd.to_datetime(df_train['Start_Time'], errors='coerce')
+        df_train['Hour'] = df_train['Start_Time'].dt.hour
+        df_train['Weather_Condition'] = df_train['Weather_Condition'].fillna('Clear')
+        df_train['Temperature(F)'] = df_train['Temperature(F)'].fillna(60)
+        df_train['Humidity(%)'] = df_train['Humidity(%)'].fillna(50)
+        
+        # Encode Weather
+        df_train['Weather_Encoded'] = le_weather.fit_transform(df_train['Weather_Condition'].astype(str))
+        
+        # [FIX] Safely access classes_ using getattr to satisfy strict type checker
+        # This defaults to [] if classes_ is missing, preventing the "None" error
+        weather_classes = getattr(le_weather, 'classes_', [])
+        unique_weather_options = sorted([str(x) for x in weather_classes])
+        
+        # Features & Target
+        X = df_train[['Hour', 'Weather_Encoded', 'Temperature(F)', 'Humidity(%)', 
+                    'Traffic_Signal', 'Junction', 'Crossing']]
+        y = df_train['Severity']
+        
+        # Train Model
+        rf_model = RandomForestClassifier(n_estimators=50, max_depth=10, random_state=42)
+        rf_model.fit(X, y)
+        print("Prediction Model Trained Successfully.")
+except Exception as e:
+    print(f"Model training failed: {e}")
+
 # =============================================================================
 # 1. DATA LOADING & PREPROCESSING
 # =============================================================================
@@ -132,6 +183,59 @@ app_ui = ui.page_sidebar(
             margin: 0 auto 15px auto;
             display: block;
         }
+
+        /* --- SEVERITY PREDICTOR STYLES --- */
+        .pred-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .input-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .sev-number {
+            font-size: 5rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(45deg, #FF512F, #DD2476);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sev-label {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #888;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .btn-predict {
+            background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+            border: none;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(24, 40, 72, 0.3);
+        }
+
     """)),
     # --- Main Header Area with About Button ---
     ui.div(
@@ -251,10 +355,76 @@ app_ui = ui.page_sidebar(
             )
         ),
 
-        # TAB 3: Prediction (Empty for now)
+        # [CHANGE] Modern Severity Prediction Tab
         ui.nav_panel(
-            "Prediction",
-            ui.p("ML Prediction models coming soon...")
+            "Severity Predictor",
+            ui.div(
+                ui.row(
+                    # --- Left Column: Inputs (Organized by correlation importance) ---
+                    ui.column(4,
+                        ui.div(
+                            ui.h4("Accident Scenario", class_="mb-3 text-primary fw-bold"),
+                            
+                            # Group 1: Infrastructure (High Importance)
+                            ui.div(
+                                ui.h6(fa.icon_svg("road"), " Road Infrastructure", class_="fw-bold text-muted"),
+                                ui.div(
+                                    ui.input_switch("pred_signal", "Traffic Signal", False),
+                                    ui.input_switch("pred_junction", "Junction Area", False),
+                                    ui.input_switch("pred_crossing", "Pedestrian Crossing", False),
+                                    class_="d-flex flex-wrap gap-3"
+                                ),
+                                class_="p-3 mb-3 input-card"
+                            ),
+
+                            # Group 2: Time & Weather (High Importance)
+                            ui.div(
+                                ui.h6(fa.icon_svg("cloud-sun"), " Environmental Factors", class_="fw-bold text-muted"),
+                                ui.input_select("pred_weather", "Weather Condition", choices=unique_weather_options, selected="Fair"),
+                                ui.input_slider("pred_hour", "Hour of Day (24h)", 0, 23, 17, step=1),
+                                class_="p-3 mb-3 input-card"
+                            ),
+
+                            # Group 3: Physics (Medium Importance)
+                            ui.div(
+                                ui.h6(fa.icon_svg("temperature-half"), " Atmospheric Physics", class_="fw-bold text-muted"),
+                                ui.layout_columns(
+                                    ui.input_numeric("pred_temp", "Temp (F)", 70),
+                                    ui.input_numeric("pred_hum", "Humidity (%)", 50),
+                                ),
+                                class_="p-3 mb-3 input-card"
+                            ),
+
+                            ui.input_action_button("predict_btn", "Analyze Severity Risk", class_="btn-predict w-100"),
+                            class_="h-100"
+                        )
+                    ),
+
+                    # --- Right Column: Results & Visualization ---
+                    ui.column(8,
+                        ui.row(
+                            # Top: Large Number Display
+                            ui.column(12,
+                                ui.div(
+                                    ui.span("PREDICTED SEVERITY LEVEL", class_="sev-label"),
+                                    ui.output_ui("prediction_text"), # Note: inline=True to fix spacing
+                                    ui.p("Severity ranges from 1 (Low Impact) to 4 (High Impact)", class_="small text-muted mt-2"),
+                                    class_="result-card p-4 mb-4"
+                                )
+                            ),
+                            # Bottom: Modern Donut Chart
+                            ui.column(12,
+                                ui.card(
+                                    ui.card_header("Confidence Analysis"),
+                                    output_widget("pred_prob_plot"),
+                                    full_screen=True
+                                )
+                            )
+                        )
+                    )
+                ),
+                class_="pred-container" # Applies the gradient background
+            )
         ),
     )
 )
@@ -265,6 +435,102 @@ app_ui = ui.page_sidebar(
 # =============================================================================
 
 def server(input, output, session):
+
+    # [CHANGE] Prediction Logic
+    # Adding ': Any' forces the strict checker to allow updates later
+    pred_result: Any = reactive.Value(None) 
+    pred_probs: Any = reactive.Value(None)
+
+    @reactive.effect
+    @reactive.event(input.predict_btn)
+    def compute_prediction():
+        if rf_model is None:
+            return
+
+        # 1. Prepare Input Data
+        # Ensure we handle the Weather Encoding safely
+        w_encoded = 0
+        try:
+            weather_classes = [str(x) for x in getattr(le_weather, 'classes_', [])]
+            if str(input.pred_weather()) in weather_classes:
+                w_encoded = le_weather.transform([str(input.pred_weather())])[0]
+        except Exception: 
+            w_encoded = 0
+
+        # Construct DataFrame (Features ordered exactly as trained)
+        input_data = pd.DataFrame({
+            'Hour': [input.pred_hour()],
+            'Weather_Encoded': [w_encoded],
+            'Temperature(F)': [input.pred_temp()],
+            'Humidity(%)': [input.pred_hum()],
+            # Convert switches (bool) to int (0/1)
+            'Traffic_Signal': [int(input.pred_signal())], 
+            'Junction': [int(input.pred_junction())],
+            'Crossing': [int(input.pred_crossing())]
+        })
+
+        # 2. Predict
+        try:
+            raw_prediction = rf_model.predict(input_data)[0]
+            prediction = int(raw_prediction) 
+            probabilities = rf_model.predict_proba(input_data)[0]
+            
+            pred_result.set(prediction)
+            pred_probs.set(probabilities)
+        except Exception as e:
+            print(f"Prediction Error: {e}")
+
+    @render.ui# type: ignore
+    def prediction_text():
+        val = pred_result.get()
+        if val is None:
+            # Return the placeholder '?' using a native ui.div
+            return ui.div("?", class_="sev-number")
+        
+        # Return the actual number using a native ui.div
+        # This prevents the [object Object] error
+        return ui.div(str(val), class_="sev-number")
+
+    @render_widget
+    def pred_prob_plot():
+        probs = pred_probs.get()
+        
+        if probs is None or rf_model is None:
+            # Return an empty placeholder plot with instruction
+            fig = go.Figure()
+            fig.update_layout(
+                xaxis={'visible': False}, yaxis={'visible': False}, 
+                annotations=[{'text': "Adjust inputs and click Analyze", 'showarrow': False, 'font': {'size': 20, 'color': '#ccc'}}]
+            )
+            return go.FigureWidget(fig)
+        
+        classes = rf_model.classes_
+        
+        # Create a Modern Donut Chart
+        # Colors: Green(1), Yellow(2), Orange(3), Red(4)
+        colors = ['#00b894', '#fdcb6e', '#e17055', '#d63031']
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=[f"Severity {c}" for c in classes],
+            values=probs,
+            hole=.6, # Makes it a donut
+            marker=dict(colors=colors[:len(classes)]),
+            textinfo='label+percent',
+            textposition='outside',
+            hoverinfo='label+percent+value',
+            pull=[0.1 if p == max(probs) else 0 for p in probs] # Slightly pull out the winning slice
+        )])
+        
+        # Add the "Winning" % in the center of the donut
+        max_prob = max(probs)
+        fig.update_layout(
+            showlegend=False,
+            margin=dict(t=20, b=20, l=20, r=20),
+            height=300,
+            annotations=[dict(text=f"{max_prob*100:.0f}%<br>Conf.", x=0.5, y=0.5, font_size=20, showarrow=False)]
+        )
+        
+        return go.FigureWidget(fig)
     
     # Reactive calculation for filtered data
     @reactive.calc
@@ -904,4 +1170,4 @@ static_dir = os.path.join(os.path.dirname(__file__), "assets")
 # Run the App
 app = App(app_ui, server, static_assets=static_dir)
 
-# version 1.7
+# version 2.0
