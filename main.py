@@ -122,6 +122,7 @@ app_ui = ui.page_sidebar(
 
     # --- Sidebar ---
     ui.sidebar(
+        
         ui.h4("Filters", class_="mb-3"),
         ui.p("Apply filters to Map and Time Analysis tab", class_="small text-muted"),
         
@@ -151,7 +152,7 @@ app_ui = ui.page_sidebar(
             "Weather Condition",
             choices=[],  # Will be populated dynamically
             multiple=True,
-            options={"placeholder": "All Weather Conditions"}
+            options={"placeholder": "All Conditions"}
         ),
         
         # Filter 4: Time of Day
@@ -168,7 +169,7 @@ app_ui = ui.page_sidebar(
         
         ui.input_action_button("reset_btn", "Reset All Filters", class_="btn-danger w-100"),
         
-        bg="#f8f9fa"
+        bg="transparent"
     ),
 
      # [CHANGE 1] Add Custom CSS for aesthetic shadows and gradients
@@ -277,6 +278,292 @@ app_ui = ui.page_sidebar(
         .btn-predict:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(24, 40, 72, 0.3);
+        }
+
+        /* ========== MODERN SIDEBAR STYLES (ENHANCED) ========== */
+        
+        /* Sidebar Container - Force Override */
+        aside[class*="bslib-sidebar"],
+        .bslib-sidebar-layout > .sidebar,
+        div.sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border-radius: 20px !important;
+            padding: 25px 20px !important;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3) !important;
+            border: none !important;
+        }
+        
+        /* Sidebar Headings */
+        aside h4,
+        .sidebar h4 {
+            color: white !important;
+            font-weight: 700 !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+            font-size: 1.1rem !important;
+            margin-bottom: 10px !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        }
+        
+        /* Sidebar Small Text */
+        aside p.small,
+        .sidebar p.small,
+        aside .text-muted,
+        .sidebar .text-muted {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.85rem !important;
+        }
+        
+        /* Sidebar HR */
+        aside hr,
+        .sidebar hr {
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            margin: 20px 0 !important;
+            opacity: 1 !important;
+        }
+        
+        /* All Labels in Sidebar */
+        aside label,
+        .sidebar label,
+        aside .control-label,
+        .sidebar .control-label {
+            color: white !important;
+            font-weight: 600 !important;
+            font-size: 0.95rem !important;
+            margin-bottom: 10px !important;
+            display: block !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+        }
+
+        /* Center Severity Level Label Specifically */
+        aside #filter_severity-label,
+        .sidebar #filter_severity-label,
+        aside label[for="filter_severity"],
+        .sidebar label[for="filter_severity"] {
+            text-align: center !important;
+            display: block !important;
+            width: 100% !important;
+        }
+        
+        /* Slider Container */
+        aside .form-group,
+        .sidebar .form-group {
+            margin-bottom: 25px !important;
+        }
+        
+        /* Ion Range Slider Styling */
+        aside .irs,
+        .sidebar .irs {
+            margin-top: 15px !important;
+        }
+        
+        aside .irs-bar,
+        .sidebar .irs-bar {
+            background: white !important;
+            border: none !important;
+        }
+        
+        aside .irs-from,
+        aside .irs-to,
+        aside .irs-single,
+        .sidebar .irs-from,
+        .sidebar .irs-to,
+        .sidebar .irs-single {
+            background: white !important;
+            color: #667eea !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+        }
+        
+        aside .irs-handle,
+        .sidebar .irs-handle {
+            background: white !important;
+            border: 3px solid #ffffff !important;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3) !important;
+            width: 20px !important;
+            height: 20px !important;
+            top: 22px !important;
+        }
+        
+        aside .irs-line,
+        .sidebar .irs-line {
+            background: rgba(255, 255, 255, 0.3) !important;
+            border: none !important;
+        }
+        
+        aside .irs-min,
+        aside .irs-max,
+        .sidebar .irs-min,
+        .sidebar .irs-max {
+            color: rgba(255, 255, 255, 0.8) !important;
+            background: transparent !important;
+        }
+        
+        /* Checkbox Group */
+        aside .checkbox,
+        .sidebar .checkbox {
+            margin: 8px 0 !important;
+        }
+        
+        aside .checkbox label,
+        .sidebar .checkbox label {
+            color: white !important;
+            padding: 10px 7px !important;
+            margin: 0 !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px) !important;
+            display: block !important;
+            cursor: pointer !important;
+            word-wrap: break-word !important;
+            white-space: normal !important;
+            line-height: 1.3 !important;
+            min-height: 48px !important;
+        }
+        
+        aside .checkbox label:hover,
+        .sidebar .checkbox label:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            transform: translateX(5px) !important;
+        }
+        
+        aside .checkbox input[type="checkbox"],
+        .sidebar .checkbox input[type="checkbox"] {
+            margin-right: 10px !important;
+        }
+        
+        /* Selectize Dropdown */
+        aside .selectize-control,
+        .sidebar .selectize-control {
+            margin-top: 10px !important;
+        }
+        
+        aside .selectize-input,
+        .sidebar .selectize-input {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 2px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 10px !important;
+            padding: 10px 12px !important;
+            color: #667eea !important;
+            font-weight: 500 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+            min-height: 42px !important;
+            max-height: 120px !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        
+        aside .selectize-input input,
+        .sidebar .selectize-input input {
+            color: #667eea !important;
+        }
+        
+        aside .selectize-input.focus,
+        .sidebar .selectize-input.focus {
+            border-color: white !important;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* Custom Scrollbar for Weather Dropdown */
+        aside .selectize-input::-webkit-scrollbar,
+        .sidebar .selectize-input::-webkit-scrollbar {
+            width: 6px !important;
+        }
+        
+        aside .selectize-input::-webkit-scrollbar-track,
+        .sidebar .selectize-input::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.1) !important;
+            border-radius: 10px !important;
+        }
+        
+        aside .selectize-input::-webkit-scrollbar-thumb,
+        .sidebar .selectize-input::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.4) !important;
+            border-radius: 10px !important;
+        }
+        
+        aside .selectize-input::-webkit-scrollbar-thumb:hover,
+        .sidebar .selectize-input::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.6) !important;
+        }
+        
+        aside .selectize-dropdown,
+        .sidebar .selectize-dropdown {
+            background: white !important;
+            border: none !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+            margin-top: 5px !important;
+        }
+        
+        aside .selectize-dropdown-content,
+        .sidebar .selectize-dropdown-content {
+            padding: 5px !important;
+        }
+        
+        aside .selectize-dropdown .option,
+        .sidebar .selectize-dropdown .option {
+            padding: 10px 12px !important;
+            border-radius: 6px !important;
+            color: #667eea !important;
+        }
+        
+        aside .selectize-dropdown .option:hover,
+        aside .selectize-dropdown .option.active,
+        .sidebar .selectize-dropdown .option:hover,
+        .sidebar .selectize-dropdown .option.active {
+            background: rgba(102, 126, 234, 0.1) !important;
+        }
+        
+        /* Reset Button */
+        aside .btn-danger,
+        .sidebar .btn-danger {
+            background: rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+            color: white !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.5px !important;
+            padding: 14px 20px !important;
+            border-radius: 12px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+            text-transform: uppercase !important;
+            font-size: 0.9rem !important;
+        }
+        
+        aside .btn-danger:hover,
+        .sidebar .btn-danger:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+            border-color: white !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+        }
+        
+        aside .btn-danger:active,
+        .sidebar .btn-danger:active {
+            transform: translateY(0px) !important;
+        }
+
+        /* Style for selected items in dropdown */
+        aside .selectize-input .item,
+        .sidebar .selectize-input .item {
+            background: rgba(102, 126, 234, 0.9) !important;
+            color: white !important;
+            padding: 4px 8px !important;
+            margin: 2px 4px 2px 0 !important;
+            border-radius: 6px !important;
+            display: inline-block !important;
+            font-size: 0.85rem !important;
+            line-height: 1.2 !important;
+        }
+        
+        aside .selectize-input .item .remove,
+        .sidebar .selectize-input .item .remove {
+            border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+            padding-left: 6px !important;
+            margin-left: 6px !important;
         }
 
     """)),
