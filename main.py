@@ -102,7 +102,7 @@ file_path = "us_accidents_ca_only.parquet"
 
 if os.path.exists(file_path):
     try:
-        df = pd.read_csv(file_path)
+        df = pd.read_parquet(file_path)
         
         # --- Preprocessing ---
         # Convert Start_Time to datetime
