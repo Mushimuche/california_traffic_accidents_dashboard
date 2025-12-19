@@ -98,7 +98,7 @@ if rf_model is None:
 
 # Load data
 # We check if file exists first to avoid generic errors
-file_path = "us_accidents_ca_only.csv"
+file_path = "us_accidents_ca_only.parquet"
 
 if os.path.exists(file_path):
     try:
