@@ -3,7 +3,7 @@ shinywidgets
 pandas
 plotly
 faicons
-sklearn
+scikit-learn
 typing
 polars
 time
