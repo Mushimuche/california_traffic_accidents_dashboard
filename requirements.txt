@@ -1,0 +1,10 @@
+shiny
+shinywidgets
+pandas
+plotly
+faicons
+os
+sklearn
+typing
+polars
+time

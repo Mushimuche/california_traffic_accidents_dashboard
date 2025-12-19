@@ -178,7 +178,8 @@ app_ui = ui.page_sidebar(
         ),
         
         ui.hr(),
-        
+        #[CHANGE] Add this primary button
+        ui.input_action_button("update_btn", "Update Dashboard", class_="btn-primary w-100 mb-3"),
         ui.input_action_button("reset_btn", "Reset All Filters", class_="btn-danger w-100"),
         
         bg="transparent"
@@ -690,27 +691,45 @@ app_ui = ui.page_sidebar(
                 font-size: 0.85rem !important;
             }
 
-            /* Reset Button */
+            /* [CHANGE] Updated to style BOTH Update (primary) and Reset (danger) buttons */
             aside .btn-danger,
-            .sidebar .btn-danger {
+            .sidebar .btn-danger,
+            aside .btn-primary,
+            .sidebar .btn-primary {
                 background: rgba(255, 255, 255, 0.25) !important;
                 backdrop-filter: blur(15px) !important;
                 border: 3px solid rgba(255, 255, 255, 0.6) !important;
                 color: white !important;
                 font-weight: 800 !important;
-                letter-spacing: 1.5px !important;
-                padding: 16px 20px !important;
+                letter-spacing: 1.2px !important; /* Slightly reduced spacing to fit text */
+                
+                /* Centering Logic */
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                text-align: center !important;
+                
+                /* Sizing & Padding */
+                padding: 12px 5px !important; /* Less side padding so text doesn't squeeze */
+                min-height: 60px !important; /* Taller button */
+                width: 100% !important;
+                
                 border-radius: 15px !important;
                 text-transform: uppercase !important;
-                font-size: 1rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1.2 !important; /* Good spacing for two lines */
+                
                 box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
                 transition: all 0.3s ease !important;
                 position: relative !important;
                 overflow: hidden !important;
             }
 
+            /* Hover effects for BOTH buttons */
             aside .btn-danger::before,
-            .sidebar .btn-danger::before {
+            .sidebar .btn-danger::before,
+            aside .btn-primary::before,
+            .sidebar .btn-primary::before {
                 content: '' !important;
                 position: absolute !important;
                 top: 0 !important;
@@ -722,12 +741,16 @@ app_ui = ui.page_sidebar(
             }
 
             aside .btn-danger:hover::before,
-            .sidebar .btn-danger:hover::before {
+            .sidebar .btn-danger:hover::before,
+            aside .btn-primary:hover::before,
+            .sidebar .btn-primary:hover::before {
                 left: 100% !important;
             }
 
             aside .btn-danger:hover,
-            .sidebar .btn-danger:hover {
+            .sidebar .btn-danger:hover,
+            aside .btn-primary:hover,
+            .sidebar .btn-primary:hover {
                 background: rgba(255, 255, 255, 0.35) !important;
                 border-color: white !important;
                 transform: translateY(-3px) scale(1.02) !important;
@@ -1361,12 +1384,10 @@ def server(input, output, session):
     # Reactive calculation for filtered data - ADD DEBOUNCING
     @reactive.calc
     @reactive.event(
-        input.filter_year,
-        input.filter_severity,
-        input.filter_weather,
-        input.filter_hour,
-        input.reset_btn,
-        ignore_none=True
+        input.update_btn, # [CHANGE] Only listen to the button click
+        input.reset_btn,  # And the reset button
+        ignore_none=False,
+        ignore_init=False # [CHANGE] vital: ensures data loads once on startup without clicking
     )
     def filtered_df() -> pd.DataFrame:
         # Start with full dataset
@@ -1429,7 +1450,7 @@ def server(input, output, session):
                     ),
                     ui.p(
                         ui.strong("Preprocessing:"), 
-                        " Two pipelines were established. A 'ground-truth' dataset (~880k records) was cleaned for visualization to reflect natural distributions. A second 'balanced' dataset was created via undersampling to resolve class imbalance, ensuring the machine learning model did not bias toward the majority class (minor accidents).",
+                        " Two pipelines were established. A 'ground-truth' dataset (~880k records) was cleaned for visualization to reflect natural distributions. A second 'balanced' dataset was created via undersampling to resolve class imbalance, ensuring the machine learning model did not bias toward the majority class (minor road accidents).",
                         class_="text-muted mb-2"
                     ),
                     ui.p(
@@ -1445,11 +1466,11 @@ def server(input, output, session):
                     ui.tags.ul(
                         ui.tags.li(
                             ui.strong("Temporal Trends:"), 
-                            " Accident volume exhibits strong seasonality, peaking in December (~100k cases) and on Fridays (~120k cases). The most critical daily window is the evening rush hour (17:00)."
+                            " Road accident volume exhibits strong seasonality, peaking in December (~100k cases) and on Fridays (~120k cases). The most critical daily window is the evening rush hour (17:00)."
                         ),
                         ui.tags.li(
                             ui.strong("Environmental Factors:"), 
-                            " Counter-intuitively, 63.36% of accidents occur during 'Fair' weather, suggesting driver volume outweighs adverse conditions. Infrastructure-wise, Junctions (9.17%) and Traffic Signals (6.71%) are the highest-risk road features."
+                            " Counter-intuitively, 63.36% of road accidents occur during 'Fair' weather, suggesting driver volume outweighs adverse conditions. Infrastructure-wise, Junctions (9.17%) and Traffic Signals (6.71%) are the highest-risk road features."
                         ),
                         ui.tags.li(
                             ui.strong("Predictive Insight:"), 
@@ -1648,8 +1669,8 @@ def server(input, output, session):
         # PERFORMANCE NOTE: Mapping >100k points crashes browsers.
         # We sample the data for the map if it's too large.
         map_data = data
-        if len(data) > 10000:
-            map_data = data.sample(10000)
+        if len(data) > 2500:
+            map_data = data.sample(2500)
 
         fig = px.scatter_mapbox(
             map_data,
